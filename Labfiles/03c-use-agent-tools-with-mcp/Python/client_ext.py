@@ -34,28 +34,45 @@ mcp_tool = McpTool(
 )
 
 
-# Force approval workflow to invoke our handler so we can approve calls.
-mcp_tool.set_approval_mode("always")
+class AutoApprovalRunHandler(RunHandler):
+    """A custom RunHandler that automatically approves all MCP tool calls."""
+    def submit_mcp_tool_approval(self, *, run, tool_call, **kwargs):
+        print(f"[Auto-Approve] MCP tool call: id={tool_call.id} name={getattr(tool_call, 'name', '')}")
+        return ToolApproval(tool_call_id=tool_call.id, approve=True)
+
+
+class InteractiveRunHandler(RunHandler):
+    """A custom RunHandler that prompts the user to approve or reject MCP tool calls."""
+    def submit_mcp_tool_approval(self, *, run, tool_call, **kwargs):
+        # Prompt user to approve or reject the MCP tool call
+        print(f"[User Approval Required] MCP tool call: id={tool_call.id} name={getattr(tool_call, 'name', '')}")
+        while True:
+            user_input = input("Approve this tool call? (y/n): ").strip().lower()
+            if user_input in ('y', 'yes'):
+                print("Tool call approved.")
+                return ToolApproval(tool_call_id=tool_call.id, approve=True)
+            elif user_input in ('n', 'no'):
+                print("Tool call rejected.")
+                return ToolApproval(tool_call_id=tool_call.id, approve=False)
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
+
+if (
+    os.environ.get("REQUIRE_APPROVAL", "false").lower()
+    in ("1", "true", "yes")
+):
+    print("MCP tool calls will require user approval.")
+    run_handler = InteractiveRunHandler()
+    mcp_tool.set_approval_mode("always")
+else:
+    print("MCP tool calls will be auto-approved.")
+    run_handler = AutoApprovalRunHandler()
+    mcp_tool.set_approval_mode("never")
 
 # Bind tools at the AGENT level (difference from client.py which supplies toolset at run time)
 toolset = ToolSet()
 toolset.add(mcp_tool)
 
-
-# Custom handler that auto-approves MCP tool calls
-class CustomRunHandler(RunHandler):
-    def submit_mcp_tool_approval(self, *, run, tool_call, **kwargs):  # noqa: D401 - SDK override
-        # Auto-approve every MCP tool call. Add policy checks/logging here if desired.
-        print(f"[Auto-Approve] MCP tool call: id={tool_call.id} name={getattr(tool_call, 'name', '')}")
-        try:
-            return ToolApproval(tool_call_id=tool_call.id, approve=True)
-        except TypeError:
-            # Fallback in case constructor signature differs (older preview versions)
-            return ToolApproval(tool_call.id, True)
-
-
-# Use our custom handler that auto-approves MCP tool calls
-run_handler = CustomRunHandler()
 
 # Create agent with MCP tool and process agent run
 with agents_client:
