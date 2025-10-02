@@ -75,55 +75,55 @@ with agents_client:
     print(f"Created agent, ID: {agent.id}")
     print(f"MCP Server: {mcp_tool.server_label} at {mcp_tool.server_url}")
 
-    # # Create thread for communication
-    # thread = agents_client.threads.create()
-    # print(f"Created thread, ID: {thread.id}")
-    #
-    # # Create a message on the thread
-    # prompt = input("\nHow can I help?: ")
-    # message = agents_client.messages.create(
-    #     thread_id=thread.id,
-    #     role="user",
-    #     content=prompt,
-    # )
-    # print(f"Created message, ID: {message.id}")
-    #
-    # # Create and process agent run in thread using the run_handler (required when tools bound at agent level)
-    # run = agents_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id, run_handler=run_handler)
-    # # Check run status
-    # print(f"Run completed with status: {run.status}")
-    # if run.status == "failed":
-    #     print(f"Run failed: {run.last_error}")
-    #
-    # # Display run steps and tool calls
-    # run_steps = agents_client.run_steps.list(thread_id=thread.id, run_id=run.id)
-    # for step in run_steps:
-    #     print(f"Step {step['id']} status: {step['status']}")
-    #
-    #     # Check if there are tool calls in the step details
-    #     step_details = step.get("step_details", {})
-    #     tool_calls = step_details.get("tool_calls", [])
-    #
-    #     if tool_calls:
-    #         # Display the MCP tool call details
-    #         print("  MCP Tool calls:")
-    #         for call in tool_calls:
-    #             print(f"    Tool Call ID: {call.get('id')}")
-    #             print(f"    Type: {call.get('type')}")
-    #             print(f"    Name: {call.get('name')}")
-    #
-    #     print()  # add an extra newline between steps
-    #
-    # # Fetch and log all messages
-    # messages = agents_client.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
-    # print("\nConversation:")
-    # print("-" * 50)
-    # for msg in messages:
-    #     if msg.text_messages:
-    #         last_text = msg.text_messages[-1]
-    #         print(f"{msg.role.upper()}: {last_text.text.value}")
-    #         print("-" * 50)
-    #
-    # # Clean-up and delete the agent once the run is finished.
-    # agents_client.delete_agent(agent.id)
-    # print("Deleted agent")
+    # Create thread for communication
+    thread = agents_client.threads.create()
+    print(f"Created thread, ID: {thread.id}")
+
+    # Create a message on the thread
+    prompt = input("\nHow can I help?: ")
+    message = agents_client.messages.create(
+        thread_id=thread.id,
+        role="user",
+        content=prompt,
+    )
+    print(f"Created message, ID: {message.id}")
+
+    # Create and process agent run in thread using the run_handler (required when tools bound at agent level)
+    run = agents_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id, run_handler=run_handler)
+    # Check run status
+    print(f"Run completed with status: {run.status}")
+    if run.status == "failed":
+        print(f"Run failed: {run.last_error}")
+
+    # Display run steps and tool calls
+    run_steps = agents_client.run_steps.list(thread_id=thread.id, run_id=run.id)
+    for step in run_steps:
+        print(f"Step {step['id']} status: {step['status']}")
+
+        # Check if there are tool calls in the step details
+        step_details = step.get("step_details", {})
+        tool_calls = step_details.get("tool_calls", [])
+
+        if tool_calls:
+            # Display the MCP tool call details
+            print("  MCP Tool calls:")
+            for call in tool_calls:
+                print(f"    Tool Call ID: {call.get('id')}")
+                print(f"    Type: {call.get('type')}")
+                print(f"    Name: {call.get('name')}")
+
+        print()  # add an extra newline between steps
+
+    # Fetch and log all messages
+    messages = agents_client.messages.list(thread_id=thread.id, order=ListSortOrder.ASCENDING)
+    print("\nConversation:")
+    print("-" * 50)
+    for msg in messages:
+        if msg.text_messages:
+            last_text = msg.text_messages[-1]
+            print(f"{msg.role.upper()}: {last_text.text.value}")
+            print("-" * 50)
+
+    # Clean-up and delete the agent once the run is finished.
+    agents_client.delete_agent(agent.id)
+    print("Deleted agent")
