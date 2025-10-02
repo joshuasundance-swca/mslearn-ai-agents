@@ -1,0 +1,4 @@
+.idea/
+**/.env
+**/labenv/
+**/__pycache__/
